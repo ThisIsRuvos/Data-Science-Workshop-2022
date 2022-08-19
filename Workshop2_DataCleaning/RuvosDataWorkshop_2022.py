@@ -30,7 +30,7 @@ import seaborn as sns
 ## Note on Data Pipelines:
 ##    Here we are manually connecting to files on a computer, often we have to encode everything in digital pipelines 
 ##    in the cloud, which has its own headaches.
-os.chdir('C:/Users/Jake/Desktop/Projects/Coding_Playground/PythonCode/datacleaning')
+os.chdir('C:/Users/Jake/Desktop/Projects/Coding_Playground/PythonCode/datacleaning') #Change to your working directory
 print("Current Working Directory " , os.getcwd())
 
 
@@ -43,32 +43,32 @@ print("Current Working Directory " , os.getcwd())
 
 ####-------------------------------------------------------------------------------------------------------------------#
 ## Open Covid19 Data Set
-c19 = pd.read_csv("covid19_in_usa/us_counties_covid19_daily.csv")
+c19 = pd.read_csv("covid19-in-usa/us_counties_covid19_daily.csv")
 
 ####-------------------------------------------------------------------------------------------------------------------#
 ## Data Cleaning
 
 ## Do you know what the data SHOULD look like? Compare that to the quick dive here:
-c19.dtypes   # Notice that cases and deaths are not stored as the same data type
-c19.describe() #Notice the maxes of Cases and Deaths?! Will need to look into this
-c19.shape
+print(c19.dtypes)   # Notice that cases and deaths are not stored as the same data type
+print(c19.describe()) #Notice the maxes of Cases and Deaths?! Will need to look into this
+print(c19.shape)
 print('No. of rows: %s |  No. of cols: %s' % (c19.shape[0], c19.shape[1]))
 
 ## 800k rows, but how many are distinct days?
-c19['date'].nunique() #320
-c19['date'].min()
-c19['date'].max()
+print(c19['date'].nunique()) #320
+print(c19['date'].min())
+print(c19['date'].max())
 
 ## Note: Very common in timeseries data to have missing dates (not null/ nan/ or 0, but MISSING).
 ##       Need to confirm your index is complete.
 
 ##  How many distinct counties/ states? #################################################################
-c19['county'].nunique() #1929, but there are 3,006 in the US. What's missing?
-c19['state'].nunique() #55 states? List
+print(c19['county'].nunique()) #1929, but there are 3,006 in the US. What's missing?
+print(c19['state'].nunique()) #55 states? List
 
 ## Confirm if 55 states == states & territories
 c19_states = list(c19['state'].unique())
-len(c19_states)
+print(len(c19_states))
 print(c19_states) #DC, Guam, N Mariana Islands, Puerto Rico, Virgin Islands (so States & Territories) --> should we update col name to reflect?)
 
 
@@ -111,7 +111,7 @@ c19_daily = c19.groupby(['date']).sum()
 c19_daily.drop('fips', axis=1, inplace=True)
 # Notice cases are int and deaths are float- fyi, as a data scientist, my intution is there are 
 # probably NAs present in deaths which change the format
-c19_daily.dtypes 
+print(c19_daily.dtypes) 
 print(c19_daily.head())
 
 plt.plot(c19_daily)
@@ -243,7 +243,7 @@ c19_daily.groupby(c19_daily.index.day)["cases_daily"].mean().plot(
 
 ## Weekly Average
 fig, axs = plt.subplots(figsize=(12, 4))
-c19_daily.groupby(c19_daily.index.week)["cases_daily"].mean().plot(
+c19_daily.groupby(c19_daily.index.isocalendar().week)["cases_daily"].mean().plot(
     kind='bar', rot=0, ax=axs)
 
 ## Monthly Average
@@ -254,21 +254,21 @@ c19_daily.groupby(c19_daily.index.month)["cases_daily"].mean().plot(
 #------------------------------
 # Daily cases with boxplot
 fig, axs = plt.subplots(figsize=(12, 4))
-sns.boxplot(x=c19_daily.index.day, y=c19_daily['cases_daily'])
+sns.boxplot(x=c19_daily.index.day, y=c19_daily['cases_daily'], color = 'cyan')
 axs.set_xlabel('Day of month')
 axs.set_title('Boxplot of Daily Cases')
 axs.set_ylabel('Cases')
 
 # Weekly cases with boxplot
 fig, axs = plt.subplots(figsize=(12, 4))
-sns.boxplot(x=c19_daily.index.week, y=c19_daily['cases_daily'])
+sns.boxplot(x=c19_daily.index.isocalendar().week, y=c19_daily['cases_daily'], color = 'cyan')
 axs.set_xlabel('Week of year')
 axs.set_title('Boxplot of Weekly Cases')
 axs.set_ylabel('Cases')
 
 # Monthly cases with boxplot
 fig, axs = plt.subplots(figsize=(12, 4))
-sns.boxplot(x=c19_daily.index.month, y=c19_daily['cases_daily'])
+sns.boxplot(x=c19_daily.index.month, y=c19_daily['cases_daily'], color = 'cyan')
 axs.set_xlabel('Month of year')
 axs.set_title('Boxplot of Monthly Cases')
 axs.set_ylabel('Cases')
@@ -291,6 +291,9 @@ fig.suptitle('Scatterplot: Fips vs. Case Count', fontsize=16)
 ## Can get fun with heatmaps of correlations
 plt.figure(figsize=(9,5))
 sns.heatmap(c19.corr(), cmap = 'coolwarm', annot=True, linewidth = 0.5)
+
+#Follow this link to download a data sample with latitude and longitude into your working directory:
+#https://github.com/kjhealy/us-county/blob/master/data/geojson/gz_2010_us_050_00_500k.json
 
 
 ## Import GeoJson data (like JSON, but has specific latitude/longitude components used for visualization)
