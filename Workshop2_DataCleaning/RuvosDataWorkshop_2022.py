@@ -18,10 +18,10 @@ We should be asking these overarching questions of ourselves:
 import os
 import pandas as pd
 import numpy as np
+import geojson
 import opendatasets as od
 import matplotlib.pyplot as plt
-#conda install -c plotly plotly-geo
-import plotly.figure_factory as ff
+import folium
 import seaborn as sns
 
 
@@ -273,28 +273,50 @@ axs.set_xlabel('Month of year')
 axs.set_title('Boxplot of Monthly Cases')
 axs.set_ylabel('Cases')
 
+## Correlation
+## Scatterplot matrix plots all variables against each other as x, y pair for correlation assessment
+pd.plotting.scatter_matrix(c19)
 
-####-------------------------------------------------------------------------------------------------------------------#
-## Spatial Mapping
-## Plot State and Counties by Fips
-fips = list(c19['fips'].unique().astype(int)) #Select Unique, Convert Array of float to array of int, Convert array to list
-values = range(len(fips))
+## The diagonal shows the distribution (histogram) of the three numeric variables of our example data.
+## Other cells are correlation plots of each variable combination in our dataframe.
 
-fig = ff.create_choropleth(fips=fips, values=values)
-fig.layout.template = None
-fig.show()
+## Zoomed in example
+## Note that I rotated/ flipped the axes as compared to the graph above
+fig, axs = plt.subplots(figsize=(12, 4))
+plt.scatter(c19['fips'],c19['cases'] )
+plt.xlabel("fips")
+plt.ylabel("cases")
+fig.suptitle('Scatterplot: Fips vs. Case Count', fontsize=16)
 
-##https://www.python-graph-gallery.com/292-choropleth-map-with-folium
-# import the folium library
-import folium
+## Can get fun with heatmaps of correlations
+plt.figure(figsize=(9,5))
+sns.heatmap(c19.corr(), cmap = 'coolwarm', annot=True, linewidth = 0.5)
 
-# initialize the map and store it in a m object
+
+## Import GeoJson data (like JSON, but has specific latitude/longitude components used for visualization)
+with open("gz_2010_us_050_00_500k.json") as f:
+    geoj = geojson.load(f)
+geo_usa = geoj['features'][0]
+
 m = folium.Map(location=[40, -95], zoom_start=4)
-
-# show the map
 m
 
-## What to do with missing data
+## Create example dataset to map
+mapp = c19.copy()
+mapp = mapp.groupby(['county']).sum()
+mapp.reset_index(inplace=True)
+mapp.head()
 
-## Discuss randomness in variables, correlation, autocorrelation
-## Variable
+folium.Choropleth(geo_data = geo_usa, name = "Choropleth", data = mapp, 
+columns = ['county', 'cases'], key_on = 'feature.properties.COUNTY', fill_color = "YlGn",
+fill_opacity=0.7, line_opacity=0.1, legend_name = "Cases").add_to(m)
+
+folium.LayerControl().add_to(m)
+
+m
+
+## Typical Mapping Issues
+# Projections (WGS84, ...)
+# Latitude/Longitude Format
+# Data Table Merging Issues (e.g. Orange County vs ORANGE COUNTY)
+# Duplicates (e.g. Orange County FL vs Orange County CA)
